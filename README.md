@@ -1,4 +1,4 @@
-## Guangfang Jiangjunqi
+## Guangfang Generals
 
 <h1 align="center">
   <img src="client/public/img/favicon.png" style="height: 90px;"alt="Gennia">
@@ -6,7 +6,7 @@
   <img src="client/public/img/gennia-logo.png" style="height: 30px;"alt="Gennia">
 </h1>
 
-> [Guangfang Jiangjunqi](https://generals.gxwtf.cn): Powered By Gennia, Yet another generals.io clone server & client
+> [Guangfang Generals](https://generals.gxwtf.cn): Powered By Gennia, Yet another generals.io clone server & client
 
 <h5 align="center">
 <img src="gennia-pc.png" width="400" >

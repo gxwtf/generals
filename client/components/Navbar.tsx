@@ -33,12 +33,12 @@ const navItems = [
   { href: '/', label: 'home', icon: <HomeRounded /> },
   { href: 'https://gxwtf.cn/', label: 'wiki', icon: <BookRounded /> },
   {
-    href: 'https://github.com/gxwtf/gxwtf_generals',
+    href: 'https://github.com/gxwtf/generals',
     label: 'github',
     icon: <GitHub />,
   },
   {
-    href: 'https://github.com/gxwtf/gxwtf_generals/issues',
+    href: 'https://github.com/gxwtf/generals/issues',
     label: 'feedback',
     icon: <FeedbackRounded />,
   },
