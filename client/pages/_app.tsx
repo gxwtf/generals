@@ -1,11 +1,12 @@
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
-import { appWithTranslation } from 'next-i18next';
+import { appWithTranslation, useTranslation } from 'next-i18next';
 import Head from 'next/head';
 // import Snowflakes from 'magic-snowflakes';
 // import { useEffect } from 'react';
 
 function App({ Component, pageProps }: AppProps) {
+  const { t } = useTranslation();
   // useEffect(() => {
   //   const snowflakes = new Snowflakes();
   //   snowflakes.start();
@@ -13,7 +14,7 @@ function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Generals</title>
+        <title>{t('site-name')}</title>
       </Head>
       <Component {...pageProps} />
     </>

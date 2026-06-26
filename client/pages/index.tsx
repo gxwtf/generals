@@ -12,6 +12,7 @@ import theme from '../components/theme';
 import Head from 'next/head';
 
 export default function Home() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function Home() {
     <StrictMode>
       <ThemeProvider theme={theme}>
         <Head>
-          <title>Home | Generals</title>
+          <title>{t('page-title-home')} | {t('site-name')}</title>
         </Head>
         <Navbar />
         {!username && (

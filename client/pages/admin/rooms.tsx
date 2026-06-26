@@ -128,7 +128,7 @@ export default function AdminRooms() {
     <StrictMode>
       <ThemeProvider theme={theme}>
         <Head>
-          <title>{t('room-management')} | Generals</title>
+          <title>{t('room-management')} | {t('site-name')}</title>
         </Head>
         <Box>
           <Navbar />

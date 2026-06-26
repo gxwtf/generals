@@ -1,14 +1,16 @@
 import { ThemeProvider } from '@mui/material/styles';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import theme from '@/components/theme';
 import GameReplay from '@/components/game/GameReplay';
 import Head from 'next/head';
 
 function ReplayPage() {
+  const { t } = useTranslation();
   return (
     <ThemeProvider theme={theme}>
       <Head>
-        <title>Replay | Generals</title>
+        <title>{t('page-title-replay')} | {t('site-name')}</title>
       </Head>
       <GameReplay />
     </ThemeProvider>

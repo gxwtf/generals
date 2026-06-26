@@ -1,15 +1,17 @@
 import { ThemeProvider } from '@mui/material/styles';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import theme from '@/components/theme';
 import GameRoom from '@/components/GameRoom';
 import { GameProvider } from '@/context/GameContext';
 import Head from 'next/head';
 
 function RoomPage() {
+  const { t } = useTranslation();
   return (
     <ThemeProvider theme={theme}>
       <Head>
-        <title>Gaming Room | Generals</title>
+        <title>{t('page-title-gaming-room')} | {t('site-name')}</title>
       </Head>
       <GameProvider>
         <GameRoom />
