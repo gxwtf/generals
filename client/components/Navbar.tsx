@@ -97,7 +97,7 @@ function Navbar() {
                 src='/img/generals-logo.png'
                 width={50}
                 height={50}
-                alt='Jiangjunqi logo'
+                alt='Generals logo'
               />
             </Link>
           </Box>
@@ -146,7 +146,7 @@ function Navbar() {
                 src='/img/generals-logo.png'
                 width={50}
                 height={50}
-                alt='Jiangjunqi logo'
+                alt='Generals logo'
               />
             </Link>
           </Box>

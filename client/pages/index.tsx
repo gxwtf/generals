@@ -33,7 +33,7 @@ export default function Home() {
     <StrictMode>
       <ThemeProvider theme={theme}>
         <Head>
-          <title>Home | Jiangjunqi</title>
+          <title>Home | Generals</title>
         </Head>
         <Navbar />
         {!username && (

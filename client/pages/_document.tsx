@@ -21,7 +21,7 @@ export default function Document() {
         name='description'
         content='A real-time multiplayer game built with Nextjs Socket.IO'
       />
-      <meta name='keywords' content='Jiangjunqi, multiplayer-game'></meta>
+      <meta name='keywords' content='Generals, multiplayer-game'></meta>
       <body>
         <Main />
         <NextScript />

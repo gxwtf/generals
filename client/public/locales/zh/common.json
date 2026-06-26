@@ -132,6 +132,7 @@
   "delete-room-failed": "删除房间失败",
   "no-rooms": "暂无房间",
   "actions": "操作",
+  "room-management": "房间管理",
   "howToPlay": {
     "title": "如何玩",
     "shortcut": "快捷键",
