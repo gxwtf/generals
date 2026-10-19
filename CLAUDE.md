@@ -145,4 +145,4 @@ Two models in Prisma:
 - **Force start mechanism**: Players vote to start; when threshold reached (`forceStartOK`), game begins
 - **Team system**: Supports multiple teams (MaxTeamNum), players on same team share victory
 - **Map generation**: Random maps generated based on room settings (mapWidth, mapHeight, mountain, city density) or custom maps loaded from database
-- **Domain**: Current production domain is gennia.online (previously gennia.io)
+- **Domain**: Current production domain is generals.gxwtf.cn
