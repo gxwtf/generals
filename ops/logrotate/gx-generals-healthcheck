@@ -1,0 +1,13 @@
+/var/log/gx-generals-healthcheck.log {
+    # /var/log 的组权限可写（syslog 等），不加 su 时 logrotate -d 会以
+    # "parent directory has insecure permissions" 跳过，故显式指定执行用户
+    su root root
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    create 0644 root root
+}

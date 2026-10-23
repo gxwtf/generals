@@ -32,3 +32,20 @@ model StarUsers {
 
   @@unique([userId, mapId])
 }
+
+// 回放索引：原本回放只以 records/<replayId>.json 文件存在，无法按玩家/时间检索。
+// 每局结束写入回放文件时同步插入一条索引（见 src/lib/replay-index.ts），
+// 历史文件由 scripts/index-replays.ts 一次性回填。
+// 注意：players 的 GIN 索引无法用 Prisma schema 表达，手写在 migration 里；本仓库 .gitignore
+// 忽略了 prisma/migrations，其他环境用 `npx prisma migrate dev --name add_replay_record` 生成，
+// 等价 DDL 见开发文档 server/generals.md。
+model ReplayRecord {
+  replayId  String   @id // records/ 下的文件名（不含 .json）
+  playedAt  DateTime // 对局结束时间（回放文件 mtime）
+  players   String[] // 参与本局的所有用户名（含机器人）
+  mapWidth  Int      @default(0)
+  mapHeight Int      @default(0)
+  indexedAt DateTime @default(now())
+
+  @@index([playedAt])
+}

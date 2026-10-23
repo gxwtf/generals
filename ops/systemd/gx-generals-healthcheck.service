@@ -1,0 +1,18 @@
+[Unit]
+Description=Gennia (gxwtf) generals healthcheck: backend/bot/client/public probes with auto-restart
+Documentation=file:///home/gxwtf/gxwtf_generals/ops/README-healthcheck.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# 默认以 root 运行（未设置 User=），脚本内直接调用 systemctl restart/reload
+ExecStart=/home/gxwtf/gxwtf_generals/ops/gx-generals-healthcheck.sh --once
+# 单次运行包含全部探针 + 重启后恢复验证，最坏情况约 90s
+TimeoutStartSec=180
+Nice=10
+# 由 timer 每分钟触发；失败不自动重启，避免与 timer 叠加
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

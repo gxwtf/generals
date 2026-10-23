@@ -1,0 +1,14 @@
+[Unit]
+Description=Run gx-generals-healthcheck every 60 seconds
+Documentation=file:///home/gxwtf/gxwtf_generals/ops/README-healthcheck.md
+
+[Timer]
+# 开机 60s 后首次触发，此后每 60s 触发一次
+OnBootSec=60s
+OnUnitActiveSec=60s
+# 默认 AccuracySec=1min 会让「每 60s」退化成 60~120s，收紧到 5s
+AccuracySec=5s
+Unit=gx-generals-healthcheck.service
+
+[Install]
+WantedBy=timers.target

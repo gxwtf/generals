@@ -7,7 +7,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 import { ColorArr, MaxTeamNum, forceStartOK } from './lib/constants';
 import { roomPool, createRoom } from './lib/room-pool';
@@ -18,6 +18,7 @@ import Player from './lib/player';
 import GameMap from './lib/map';
 import MapDiff from './lib/map-diff';
 import GameRecord from './lib/game-record';
+import { REPLAY_ID_RE, indexReplay } from './lib/replay-index';
 
 dotenv.config();
 
@@ -56,6 +57,11 @@ app.get('/create_room', async (req: Request, res: Response) => {
 
 app.get('/get_replay/:replayId', async (req: Request, res: Response) => {
   const replayId = req.params.replayId;
+  // replayId 直接参与拼路径，必须校验，否则可用 ../ 读取 records/ 之外的 JSON 文件
+  if (!REPLAY_ID_RE.test(replayId)) {
+    res.status(400).json({ error: 'Invalid replayId' });
+    return;
+  }
   const replayFilePath = path.join(process.cwd(), 'records', `${replayId}.json`);
 
   fs.readFile(replayFilePath, 'utf8', (err, data) => {
@@ -72,6 +78,104 @@ app.get('/get_replay/:replayId', async (req: Request, res: Response) => {
       }
     }
   });
+});
+
+// GET /replays?username=xxx&from=2026-10-01&to=2026-10-23&limit=20&offset=0
+// 按「用户名 + 可选时间区间」查询回放列表。数据来自 ReplayRecord 索引表，不扫 records/ 文件。
+const REPLAY_DEFAULT_LIMIT = 20;
+const REPLAY_MAX_LIMIT = 100;
+const REPLAY_MAX_USERNAME_LENGTH = 32;
+
+/**
+ * 解析 from/to：支持 YYYY-MM-DD 与完整 ISO8601。
+ * YYYY-MM-DD 按服务器本地时区解释，from 取当天 00:00:00.000、to 取当天 23:59:59.999。
+ */
+function parseReplayDateParam(value: string, endOfDay: boolean): Date | null {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (dateOnly) {
+    const year = Number(dateOnly[1]);
+    const month = Number(dateOnly[2]);
+    const day = Number(dateOnly[3]);
+    const date = endOfDay ? new Date(year, month - 1, day, 23, 59, 59, 999) : new Date(year, month - 1, day);
+    // new Date(2026, 1, 31) 会自动进位到 3 月，借此识别 2026-02-31 这类非法日期
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+    return date;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseReplayIntParam(value: unknown, fallback: number): number | null {
+  if (value === undefined || value === '') return fallback;
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return null;
+  return Number(value);
+}
+
+app.get('/replays', async (req: Request, res: Response) => {
+  const username = typeof req.query.username === 'string' ? req.query.username.trim() : '';
+  if (!username) {
+    res.status(400).json({ success: false, error: '`username` is required' });
+    return;
+  }
+  if (username.length > REPLAY_MAX_USERNAME_LENGTH || /[\u0000-\u001f\u007f]/.test(username)) {
+    res.status(400).json({ success: false, error: 'Invalid `username`' });
+    return;
+  }
+
+  const rawFrom = typeof req.query.from === 'string' ? req.query.from.trim() : '';
+  const rawTo = typeof req.query.to === 'string' ? req.query.to.trim() : '';
+  const from = rawFrom ? parseReplayDateParam(rawFrom, false) : null;
+  const to = rawTo ? parseReplayDateParam(rawTo, true) : null;
+  if ((rawFrom && !from) || (rawTo && !to)) {
+    res.status(400).json({ success: false, error: 'Invalid `from`/`to`, expected YYYY-MM-DD or ISO8601' });
+    return;
+  }
+  if (from && to && from > to) {
+    res.status(400).json({ success: false, error: '`from` must not be later than `to`' });
+    return;
+  }
+
+  const limit = parseReplayIntParam(req.query.limit, REPLAY_DEFAULT_LIMIT);
+  if (limit === null || limit < 1 || limit > REPLAY_MAX_LIMIT) {
+    res.status(400).json({ success: false, error: `\`limit\` must be an integer between 1 and ${REPLAY_MAX_LIMIT}` });
+    return;
+  }
+  const offset = parseReplayIntParam(req.query.offset, 0);
+  if (offset === null) {
+    res.status(400).json({ success: false, error: 'Invalid `offset`' });
+    return;
+  }
+
+  const where: Prisma.ReplayRecordWhereInput = { players: { has: username } };
+  if (from || to) {
+    where.playedAt = { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) };
+  }
+
+  try {
+    const [total, replays] = await prisma.$transaction([
+      prisma.replayRecord.count({ where }),
+      prisma.replayRecord.findMany({
+        where,
+        orderBy: { playedAt: 'desc' },
+        skip: offset,
+        take: limit,
+        select: { replayId: true, playedAt: true, players: true, mapWidth: true, mapHeight: true },
+      }),
+    ]);
+    res.status(200).json({
+      success: true,
+      username,
+      from: from ? from.toISOString() : null,
+      to: to ? to.toISOString() : null,
+      total,
+      limit,
+      offset,
+      replays,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Failed to query replays' });
+  }
 });
 
 app.delete('/rooms/:roomId', async (req: Request, res: Response) => {
@@ -563,6 +667,14 @@ async function handleGame(room: Room, io: Server) {
         if (aliveTeams.length <= 1) {
           if (!aliveTeams.length) return;
           let link = room.gameRecord.outPutToJSON(process.cwd());
+          // 回放落盘后同步写入索引，供 GET /replays 检索；索引失败只记日志，不能影响对局结算
+          void indexReplay(prisma, {
+            replayId: link,
+            playedAt: new Date(),
+            players: room.gameRecord.players.map((player) => player.username),
+            mapWidth: room.gameRecord.mapWidth,
+            mapHeight: room.gameRecord.mapHeight,
+          }).catch((error) => console.error('Failed to index replay:', link, error));
           io.in(room.id).emit(
             'game_ended',
             room.players.filter((x) => x.team === aliveTeams[0]).map((x) => x.minify(true)),
