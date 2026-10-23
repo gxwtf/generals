@@ -44,7 +44,8 @@
 - bot 组失败 → `systemctl restart gxgenbot`
 - client 组失败 → `systemctl restart gxgen_client`
 - public 组失败：
-  - 本地上游（backend/bot/client）同时异常 → 判定为上游故障，不操作 nginx；
+  - 本地上游（backend/bot/client）同时异常 → 判定为上游故障，不操作 nginx，并把 nginx 的连续失败计数清零
+    （避免上游恢复后拿陈旧计数立即凑满阈值、误 reload）；
   - 本地上游健康 → `nginx -t` 通过后 `systemctl reload nginx`，reload 失败再 `systemctl restart nginx`；
     `nginx -t` 不通过 → 放弃动作并记 ERROR（避免公网入口直接中断）。
 - 同一服务动作后 `COOLDOWN_SECONDS=300` 秒冷却，冷却期内只记日志不重复动作。

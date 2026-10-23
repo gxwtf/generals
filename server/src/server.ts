@@ -85,6 +85,7 @@ app.get('/get_replay/:replayId', async (req: Request, res: Response) => {
 const REPLAY_DEFAULT_LIMIT = 20;
 const REPLAY_MAX_LIMIT = 100;
 const REPLAY_MAX_USERNAME_LENGTH = 32;
+const REPLAY_MAX_OFFSET = 2_147_483_647; // Postgres int4 上限，再大就没有实际意义
 
 /**
  * 解析 from/to：支持 YYYY-MM-DD 与完整 ISO8601。
@@ -108,7 +109,10 @@ function parseReplayDateParam(value: string, endOfDay: boolean): Date | null {
 function parseReplayIntParam(value: unknown, fallback: number): number | null {
   if (value === undefined || value === '') return fallback;
   if (typeof value !== 'string' || !/^\d+$/.test(value)) return null;
-  return Number(value);
+  const parsed = Number(value);
+  // offset 会直接作为 Prisma skip 传给 Postgres int4；超过安全整数/上限时宁可 400，也不要数据库报错变 500
+  if (!Number.isSafeInteger(parsed) || parsed > REPLAY_MAX_OFFSET) return null;
+  return parsed;
 }
 
 app.get('/replays', async (req: Request, res: Response) => {

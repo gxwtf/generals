@@ -306,7 +306,6 @@ verify_group_recovery() { # group unit
 # 状态计数与恢复动作
 # ---------------------------------------------------------------------------
 declare -A SERVICE_FAIL_COUNT=()
-declare -A GROUP_TO_UNIT=()
 
 update_service_state() { # group unit failed
   local group="$1" unit="$2" failed="$3" prev count
@@ -462,10 +461,10 @@ main() {
     if [ "$local_fail" -eq 1 ]; then
       # 公网入口的失败可由本地上游异常解释：只记录，不操作 nginx（避免误 reload）
       log "WARN" "public 组失败，但本地上游（backend/bot/client）同时异常，判定为上游故障，本轮不对 ${NGINX_SERVICE} 采取动作"
-      GROUP_TO_UNIT[public]="${NGINX_SERVICE}"
+      # 上游故障期间 nginx 的连续失败计数清零，避免上游恢复后拿陈旧计数立即凑够阈值误 reload
+      update_service_state public "$NGINX_SERVICE" 0
     else
       update_service_state public "$NGINX_SERVICE" 1
-      GROUP_TO_UNIT[public]="${NGINX_SERVICE}"
     fi
   else
     update_service_state public "$NGINX_SERVICE" 0

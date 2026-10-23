@@ -8,8 +8,9 @@ After=network-online.target
 Type=oneshot
 # 默认以 root 运行（未设置 User=），脚本内直接调用 systemctl restart/reload
 ExecStart=/home/gxwtf/gxwtf_generals/ops/gx-generals-healthcheck.sh --once
-# 单次运行包含全部探针 + 重启后恢复验证，最坏情况约 90s
-TimeoutStartSec=180
+# 单次运行包含全部探针 + 重启后恢复验证：最坏情况（公网探针 20s 超时 × 10 次验证）约 210s，
+# 故留到 300s；正常一轮 1~20s。
+TimeoutStartSec=300
 Nice=10
 # 由 timer 每分钟触发；失败不自动重启，避免与 timer 叠加
 Restart=no

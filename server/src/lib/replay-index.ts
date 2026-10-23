@@ -13,7 +13,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
  */
 
 /** 回放 id 即 records/ 下的文件名，8 位小写字母数字，读取前必须校验（防路径穿越） */
-export const REPLAY_ID_RE = /^[a-z0-9]{1,16}$/i;
+export const REPLAY_ID_RE = /^[a-z0-9]{1,16}$/;
 
 /** 一次性读取的文件头长度；正常回放的 players 数组远小于该值 */
 const HEAD_BYTES = 64 * 1024;
