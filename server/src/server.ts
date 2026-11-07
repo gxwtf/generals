@@ -117,11 +117,11 @@ function parseReplayIntParam(value: unknown, fallback: number): number | null {
 
 app.get('/replays', async (req: Request, res: Response) => {
   const username = typeof req.query.username === 'string' ? req.query.username.trim() : '';
-  if (!username) {
-    res.status(400).json({ success: false, error: '`username` is required' });
-    return;
-  }
-  if (username.length > REPLAY_MAX_USERNAME_LENGTH || /[\u0000-\u001f\u007f]/.test(username)) {
+  // if (!username) {
+  //   res.status(400).json({ success: false, error: '`username` is required' });
+  //   return;
+  // }
+  if (username && (username.length > REPLAY_MAX_USERNAME_LENGTH || /[\u0000-\u001f\u007f]/.test(username))) {
     res.status(400).json({ success: false, error: 'Invalid `username`' });
     return;
   }
@@ -150,7 +150,10 @@ app.get('/replays', async (req: Request, res: Response) => {
     return;
   }
 
-  const where: Prisma.ReplayRecordWhereInput = { players: { has: username } };
+  const where: Prisma.ReplayRecordWhereInput = {};
+  if (username) {
+    where.players = { has: username };        // 原来是无条件赋值，现在只在有用户名时加
+  }
   if (from || to) {
     where.playedAt = { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) };
   }
